@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
   Carousel,
@@ -23,7 +23,7 @@ const getPollByIdentifierUrl = process.env.NEXT_PUBLIC_GET_POLL_BY_IDENTIFIER;
 
 const fetchPollDataByIdentifier = async (identifier: string) => {
   const apiUrl = `${getPollByIdentifierUrl}${identifier}`;
-  if (apiKey == null) {
+  if (!apiKey) {
     throw new Error("API key is not defined");
   }
   const response = await fetch(apiUrl, {
@@ -64,7 +64,7 @@ const createVote = async (
   });
 
   if (!response.ok) {
-    const errorData = await response.json(); // Get error details
+    const errorData = await response.json();
     throw new Error(`Failed to submit vote: ${errorData.message}`);
   }
 
@@ -113,7 +113,6 @@ interface PollResponse {
 
 export default function Home() {
   const [pollData, setPollData] = useState<PollData[]>([]);
-  console.log("pollData", pollData);
   const [isButtonDisabled, setButtonDisabled] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const {
@@ -124,22 +123,21 @@ export default function Home() {
   const [answers, setAnswers] = useState<string[]>([]);
 
   const searchParams = useSearchParams();
-  const identifier = searchParams.get("qrCodeID");
-  const surveyname = searchParams.get("qrCodeID")?.split("-")[0];
+  const identifier = searchParams.get("qrCodeID"); // Use only this
 
   useEffect(() => {
     const getData = async () => {
-      try {
-        if (identifier) {
+      if (identifier) {
+        try {
           const jsonData: PollResponse = await fetchPollDataByIdentifier(
             identifier
           );
           const fetchedPolls = jsonData.data.docs;
           setPollData(fetchedPolls);
           setAnswers(Array(fetchedPolls.length).fill(""));
+        } catch (error) {
+          console.error("Error fetching poll data:", error);
         }
-      } catch (error) {
-        console.error("Error fetching poll data:", error);
       }
     };
 
@@ -153,7 +151,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log("Answers: ", answers); // Debugging log
     const allAnswered = answers.every((answer) => answer !== "");
     setButtonDisabled(!allAnswered);
   }, [answers]);
@@ -186,11 +183,11 @@ export default function Home() {
   }
 
   return (
-    <>
+    <Suspense fallback={<div>Loading...</div>}>
       <div className="flex justify-center items-center min-h-screen">
         <Card className="relative p-5 pb-14">
-          <div className="text-5xl text-center pb-20">{surveyname}</div>
-
+          <div className="text-5xl text-center pb-20">{identifier}</div>{" "}
+          {/* Show identifier or survey name here */}
           {showAlert && (
             <Alert className="absolute -top-32 bg-green-500 text-white">
               <AlertTitle>Success!</AlertTitle>
@@ -264,6 +261,6 @@ export default function Home() {
           </Button>
         </Card>
       </div>
-    </>
+    </Suspense>
   );
 }
