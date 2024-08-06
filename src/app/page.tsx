@@ -56,17 +56,17 @@ export default function Home() {
     formState: { errors },
   } = useForm();
   const [answers, setAnswers] = useState<string[]>([]);
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
+  // const searchParams = useSearchParams();
+  // const pathname = usePathname();
 
-  // Get the qrCodeId from the query parameters
-  const qrCodeId = searchParams.get("qrCodeID")?.split("-");
-  const surveyName = qrCodeId?.[0];
-  const surveyID = qrCodeId?.[1];
-  console.log("surveyName", surveyName);
-  console.log("surveyID", surveyID);
+  // // Get the qrCodeId from the query parameters
+  // const qrCodeId = searchParams.get("qrCodeID")?.split("-");
+  // const surveyName = qrCodeId?.[0];
+  // const surveyID = qrCodeId?.[1];
+  // console.log("surveyName", surveyName);
+  // console.log("surveyID", surveyID);
 
-  console.log("qrCodeID", qrCodeId);
+  // console.log("qrCodeID", qrCodeId);
 
   const ID = "66b1f40e01b0dc0010e83378";
   console.log("ID", ID);
