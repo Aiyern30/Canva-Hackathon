@@ -14,8 +14,61 @@ import { Label } from "@/components/ui/Label";
 import { Button } from "@/components/ui/Button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert";
 import { useForm } from "react-hook-form";
-import { fetchPollData, createVote } from "./api/route";
-import { useSearchParams, usePathname } from "next/navigation";
+
+// Fetch poll data from the API
+// const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+const createVoteUrl = process.env.NEXT_PUBLIC_CREATE_POLL_URL;
+
+const fetchPollData = async (pollID: string) => {
+  const apiUrl = `https://api.pollsapi.com/v1/get/poll/${pollID}`;
+  if (apiKey == null) {
+    throw new Error("API key is not defined");
+  }
+  const response = await fetch(apiUrl, {
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch poll data: ${response.statusText}`);
+  }
+  return await response.json();
+};
+
+// Submit a vote to the API
+const createVote = async (
+  pollID: string,
+  optionID: string,
+  identifier: string
+) => {
+  if (!createVoteUrl) {
+    throw new Error("API URL is not defined");
+  }
+
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("API key is not defined");
+  }
+
+  const response = await fetch(createVoteUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey, // Ensure apiKey is defined
+    },
+    body: JSON.stringify({ poll_id: pollID, option_id: optionID, identifier }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json(); // Get error details
+    throw new Error(`Failed to submit vote: ${errorData.message}`);
+  }
+
+  return await response.json();
+};
 
 interface Option {
   id: string;
@@ -47,7 +100,7 @@ interface PollResponse {
 
 export default function Home() {
   const [pollData, setPollData] = useState<PollData | null>(null);
-  console.log("pollData", pollData);
+  console.log(pollData);
   const [isButtonDisabled, setButtonDisabled] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const {
@@ -56,20 +109,8 @@ export default function Home() {
     formState: { errors },
   } = useForm();
   const [answers, setAnswers] = useState<string[]>([]);
-  // const searchParams = useSearchParams();
-  // const pathname = usePathname();
 
-  // // Get the qrCodeId from the query parameters
-  // const qrCodeId = searchParams.get("qrCodeID")?.split("-");
-  // const surveyName = qrCodeId?.[0];
-  // const surveyID = qrCodeId?.[1];
-  // console.log("surveyName", surveyName);
-  // console.log("surveyID", surveyID);
-
-  // console.log("qrCodeID", qrCodeId);
-
-  const ID = "66b1f40e01b0dc0010e83378";
-  console.log("ID", ID);
+  const ID = "66b21868e8b45900171c3af1";
 
   useEffect(() => {
     const getData = async () => {
@@ -99,8 +140,6 @@ export default function Home() {
   const onSubmit = async () => {
     if (!pollData) return;
     try {
-      // Log the answers to debug
-      console.log("Submitting votes:", answers);
       await Promise.all(
         answers.map((optionId) =>
           createVote(pollData.id, optionId, pollData.identifier)
@@ -152,11 +191,11 @@ export default function Home() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem
-                            value={option.id} // Ensure this is option.id
+                            value={option.id}
                             id={`option-${index}-${option.text}`}
                             {...register(`question${index + 1}`, {
                               required: true,
-                            })} // Register here
+                            })}
                           />
                           <Label htmlFor={`option-${index}-${option.text}`}>
                             {option.text}
