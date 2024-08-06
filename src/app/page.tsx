@@ -69,6 +69,7 @@ export default function Home() {
   console.log("qrCodeID", qrCodeId);
 
   const ID = "66b1f40e01b0dc0010e83378";
+  console.log("ID", ID);
 
   useEffect(() => {
     const getData = async () => {
