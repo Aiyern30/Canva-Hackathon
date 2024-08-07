@@ -200,14 +200,11 @@ export default function Home() {
       {isSubmitting ? (
         <div className="flex flex-col items-center">
           <div className="text-3xl font-semibold mb-4">Submitting...</div>
-          {/* You can add a spinner or loading animation here */}
         </div>
       ) : submissionComplete ? (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center text-center">
           <div className="text-3xl font-semibold mb-4">Thank You!</div>
-          <div className="text-lg">
-            Your answers have been successfully submitted.
-          </div>
+          <div className="text-lg ">Your answers have been submitted.</div>
         </div>
       ) : (
         <Card className="relative p-5 pb-14 bg-white bg-opacity-80 z-10 rounded-lg shadow-xl">
