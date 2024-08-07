@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/Button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/Alert";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
+import AnimatedGridPattern from "@/components/magicui/animated-grid-pattern";
+import { cn } from "@/lib/utils";
+import Globe from "@/components/magicui/globe";
 
 // Fetch poll data from the API
 const apiKey = process.env.NEXT_PUBLIC_API_KEY;
@@ -115,6 +118,8 @@ export default function Home() {
   const [pollData, setPollData] = useState<PollData[]>([]);
   const [isButtonDisabled, setButtonDisabled] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionComplete, setSubmissionComplete] = useState(false);
   const {
     register,
     handleSubmit,
@@ -123,7 +128,8 @@ export default function Home() {
   const [answers, setAnswers] = useState<string[]>([]);
 
   const searchParams = useSearchParams();
-  const identifier = searchParams.get("qrCodeID"); // Use only this
+  const identifier = searchParams.get("qrCodeID");
+  const surveyTitle = identifier?.split("-")[0];
 
   useEffect(() => {
     const getData = async () => {
@@ -157,6 +163,7 @@ export default function Home() {
 
   const onSubmit = async () => {
     if (pollData.length === 0) return;
+    setIsSubmitting(true);
     try {
       await Promise.all(
         pollData.map((poll, pollIndex) =>
@@ -166,16 +173,12 @@ export default function Home() {
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 3000);
 
-      // Refresh poll data after submission
-      const jsonData: PollResponse = await fetchPollDataByIdentifier(
-        identifier!
-      );
-      const fetchedPolls = jsonData.data.docs;
-      setPollData(fetchedPolls);
-      setAnswers(Array(fetchedPolls.length).fill(""));
+      // Mark submission as complete
+      setSubmissionComplete(true);
     } catch (error) {
       console.error("Error submitting vote:", error);
     }
+    setIsSubmitting(false);
   };
 
   if (pollData.length === 0) {
@@ -183,11 +186,32 @@ export default function Home() {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex justify-center items-center min-h-screen">
-        <Card className="relative p-5 pb-14">
-          <div className="text-5xl text-center pb-20">{identifier}</div>{" "}
-          {/* Show identifier or survey name here */}
+    <div className="relative flex justify-center items-center min-h-screen">
+      <AnimatedGridPattern
+        numSquares={30}
+        maxOpacity={0.1}
+        duration={3}
+        repeatDelay={1}
+        className={cn(
+          "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+          "inset-x-0 inset-y-[-30%] skew-y-12 absolute top-0 left-0 w-full h-full"
+        )}
+      />
+      {isSubmitting ? (
+        <div className="flex flex-col items-center">
+          <div className="text-3xl font-semibold mb-4">Submitting...</div>
+          {/* You can add a spinner or loading animation here */}
+        </div>
+      ) : submissionComplete ? (
+        <div className="flex flex-col items-center">
+          <div className="text-3xl font-semibold mb-4">Thank You!</div>
+          <div className="text-lg">
+            Your answers have been successfully submitted.
+          </div>
+        </div>
+      ) : (
+        <Card className="relative p-5 pb-14 bg-white bg-opacity-80 z-10 rounded-lg shadow-xl">
+          <div className="text-5xl text-center pb-20">{surveyTitle}</div>
           {showAlert && (
             <Alert className="absolute -top-32 bg-green-500 text-white">
               <AlertTitle>Success!</AlertTitle>
@@ -260,7 +284,7 @@ export default function Home() {
             Submit
           </Button>
         </Card>
-      </div>
-    </Suspense>
+      )}
+    </div>
   );
 }
