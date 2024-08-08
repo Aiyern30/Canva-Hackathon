@@ -1,0 +1,19 @@
+{
+    "version": 2,
+    "projects": {
+      "rootDirectory": "Canva-Hackathon"
+    },
+    "builds": [
+      {
+        "src": "Canva-Hackathon/package.json",
+        "use": "@vercel/next"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "Canva-Hackathon/$1"
+      }
+    ]
+  }
+  
